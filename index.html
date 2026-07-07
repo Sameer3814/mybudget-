@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="MyBudget"/>
+<meta name="theme-color" content="#ffffff" id="theme-color-meta"/>
+<title>MyBudget</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --acc:#6c47ff;--acc-l:#ede9ff;--acc-d:#4f32cc;
+  --txt:#0a0a0a;--txt2:#6b7280;--txt3:#9ca3af;
+  --bg:#ffffff;--bg2:#f5f5f7;--card:#ffffff;--border:#e5e7eb;
+  --danger:#ef4444;--danger-l:#fef2f2;
+  --success:#16a34a;--success-l:#f0fdf4;
+  --warn:#f59e0b;--warn-l:#fffbeb;
+  --shadow:0 1px 4px rgba(0,0,0,.06);
+}
+[data-theme="dark"]{
+  --acc:#7c5cff;--acc-l:#1e1640;--acc-d:#a48bff;
+  --txt:#f0f4f8;--txt2:#8b95a1;--txt3:#5a6370;
+  --bg:#0f1117;--bg2:#1a1f2e;--card:#1e2433;--border:#2d3748;
+  --danger:#f87171;--danger-l:#2d1515;
+  --success:#4ade80;--success-l:#0d2d1a;
+  --warn:#fbbf24;--warn-l:#2d2010;
+  --shadow:0 1px 4px rgba(0,0,0,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Outfit',sans-serif;overflow:hidden;transition:background .25s,color .25s}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto}
+.topbar{padding:calc(env(safe-area-inset-top,16px)+8px) 20px 0;background:var(--bg);transition:background .25s}
+.topbar-inner{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.brand{font-size:21px;font-weight:800;letter-spacing:-.5px;color:var(--txt)}
+.brand span{color:var(--acc)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.phase-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px}
+.phase1{background:var(--warn-l);color:#b45309}
+[data-theme="dark"] .phase1{color:#fbbf24}
+.phase2{background:var(--success-l);color:var(--success)}
+.theme-toggle{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:all .2s;flex-shrink:0}
+.theme-toggle:active{transform:scale(.92)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:90px;background:var(--bg);transition:background .25s}
+.scroll::-webkit-scrollbar{display:none}
+.page{display:none}.page.active{display:block;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.hero{padding:20px 20px 14px}
+.hero-banner{background:var(--acc);border-radius:20px;padding:22px 22px 26px;position:relative;overflow:hidden}
+.hero-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero-banner::after{content:'';position:absolute;bottom:-50px;left:10px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.05)}
+.h-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.65);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.h-amt{font-size:48px;font-weight:800;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:4px}
+.h-sub{font-size:13px;color:rgba(255,255,255,.6)}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 20px}
+.stat{background:var(--bg2);border-radius:14px;padding:11px 10px;text-align:center;transition:background .25s}
+.sv{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:2px}
+.sl{font-size:10px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em}
+.sv.green{color:var(--success)}.sv.red{color:var(--danger)}.sv.amber{color:var(--warn)}.sv.purple{color:var(--acc)}
+.pad{padding:0 16px}
+.sec{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.1em;margin:14px 0 8px 2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:10px;transition:background .25s,border-color .25s;box-shadow:var(--shadow)}
+.bud-item{padding:14px 18px}
+.bud-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bud-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--txt)}
+.bud-icon{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.bud-pct{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px}
+.bud-nums{font-size:12px;color:var(--txt2);margin-bottom:7px}
+.track{height:6px;background:var(--bg2);border-radius:99px;overflow:hidden;transition:background .25s}
+.fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.row:hover{background:var(--bg2)}.row:last-child{border-bottom:none}
+.row-l{display:flex;align-items:center;gap:10px}
+.row-icon{width:38px;height:38px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.row-name{font-size:14px;font-weight:600;color:var(--txt)}
+.row-sub{font-size:11px;color:var(--txt2);margin-top:1px}
+.row-amt{font-size:14px;font-weight:700}
+.tip{border-radius:16px;padding:13px 15px;margin-bottom:10px;display:flex;gap:10px;align-items:flex-start}
+.tip-txt{font-size:13px;line-height:1.6}
+.tip-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.tip-purple{background:var(--acc-l)}.tip-purple .tip-txt{color:var(--acc-d)}
+[data-theme="dark"] .tip-purple .tip-txt{color:var(--acc)}
+.tip-warn{background:var(--warn-l)}.tip-warn .tip-txt{color:var(--warn)}
+.tip-green{background:var(--success-l)}.tip-green .tip-txt{color:var(--success)}
+.bnav{background:var(--card);border-top:1px solid var(--border);padding:6px 4px calc(env(safe-area-inset-bottom,6px)+2px);display:flex;gap:2px;transition:background .25s,border-color .25s}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;background:none;border:none;color:var(--txt2);font-size:10px;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;border-radius:14px;transition:all .15s}
+.nb.active{color:var(--acc);background:var(--acc-l)}
+.ni{font-size:20px;line-height:1}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.sheet{background:var(--card);border-radius:26px 26px 0 0;padding:14px 20px calc(env(safe-area-inset-bottom,20px)+14px);width:100%;max-width:430px;border-top:1px solid var(--border);transition:background .25s}
+.handle{width:38px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 18px}
+.sh-title{font-size:20px;font-weight:800;margin-bottom:16px;letter-spacing:-.5px;color:var(--txt)}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.fld input,.fld select{width:100%;padding:13px 14px;background:var(--bg2);border:1.5px solid transparent;border-radius:13px;color:var(--txt);font-size:16px;font-family:'Outfit',sans-serif;font-weight:500;outline:none;-webkit-appearance:none;transition:border-color .15s,background .25s,color .25s}
+.fld input:focus,.fld select:focus{border-color:var(--acc);background:var(--card)}
+.fld select option{background:var(--card);color:var(--txt)}
+.btn-p{width:100%;padding:15px;background:var(--acc);color:#fff;border:none;border-radius:15px;font-size:16px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;margin-top:6px;box-shadow:0 4px 14px rgba(108,71,255,.3)}
+.btn-p:active{transform:scale(.98)}
+.btn-s{background:var(--bg2);border:none;border-radius:12px;padding:8px 16px;font-size:13px;font-weight:600;font-family:'Outfit',sans-serif;color:var(--txt);cursor:pointer;transition:background .25s}
+.empty{text-align:center;padding:40px 20px;color:var(--txt2);font-size:14px;line-height:1.8}
+.debt-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px 20px;margin-bottom:12px;box-shadow:var(--shadow);transition:background .25s,border-color .25s}
+.dc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.dc-name{font-size:15px;font-weight:700;color:var(--txt)}
+.dc-sub{font-size:12px;color:var(--txt2);margin-top:2px}
+.dc-amt{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.dc-start{font-size:11px;color:var(--txt2);margin-top:2px}
+.dc-bar-wrap{height:8px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-bottom:10px}
+.dc-bar{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.dc-stats{display:flex;justify-content:space-between;font-size:12px;color:var(--txt2)}
+.exp-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.exp-row:last-child{border-bottom:none}
+.exp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.exp-body{flex:1;min-width:0}
+.exp-desc{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
+.exp-meta{font-size:11px;color:var(--txt2);margin-top:1px}
+.exp-amt{font-size:14px;font-weight:700;color:var(--danger);flex-shrink:0}
+.exp-del{background:var(--bg2);border:none;width:28px;height:28px;border-radius:8px;font-size:14px;color:var(--txt2);cursor:pointer;flex-shrink:0;transition:background .2s}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:11px 18px;border-bottom:1px solid var(--border);font-size:14px}
+.sum-row:last-child{border-bottom:none}
+.sum-row span:first-child{color:var(--txt2)}
+.net-card{background:var(--acc);border-radius:18px;padding:18px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.net-lbl{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.net-amt{font-size:34px;font-weight:800;color:#fff;letter-spacing:-1.5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">my<span>Budget</span></div>
+      <div class="topbar-right">
+        <div class="phase-pill phase1" id="phase-pill">Phase 1</div>
+        <span id="month-label" style="font-size:12px;color:var(--txt2);"></span>
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="page active" id="page-home">
+      <div class="hero">
+        <div class="hero-banner">
+          <div class="h-lbl">available this month</div>
+          <div class="h-amt" id="h-bal">$277</div>
+          <div class="h-sub" id="h-sub">in variable budgets — $0 spent</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="sv green">$5,328</div><div class="sl">Income</div></div>
+        <div class="stat"><div class="sv red">$3,231</div><div class="sl">Fixed out</div></div>
+        <div class="stat"><div class="sv amber" id="s-logged">$0</div><div class="sl">Logged</div></div>
+      </div>
+      <div class="pad">
+        <div class="sec">Variable budgets</div>
+        <div id="bud-bars"></div>
+        <div class="sec">Buffer fund</div>
+        <div class="card">
+          <div class="bud-item">
+            <div class="bud-top">
+              <div class="bud-name"><div class="bud-icon" style="background:var(--acc-l)">🛡️</div>Emergency buffer</div>
+              <div class="bud-pct" id="buf-pct" style="background:var(--acc-l);color:var(--acc);">$0</div>
+            </div>
+            <div class="bud-nums">$100/paycheck · target $4,800 by July 2028</div>
+            <div class="track"><div class="fill" id="buf-fill" style="background:var(--acc);width:0%"></div></div>
+          </div>
+        </div>
+        <div class="sec">Debt snapshot</div>
+        <div class="card">
+          <div class="row" onclick="nav('debt')">
+            <div class="row-l"><div class="row-icon" style="background:var(--danger-l)">🎓</div><div><div class="row-name">Student loan</div><div class="row-sub" id="sl-snap">$70,160 remaining</div></div></div>
+            <div class="row-amt" style="color:var(--danger)" id="sl-pct-home">0% paid</div>
+          </div>
+          <div class="row" onclick="nav('debt')">
+            <div class="row-l"><div class="row-icon" style="background:var(--warn-l)">💳</div><div><div class="row-name">Credit card</div><div class="row-sub">0% APR until April 2027</div></div></div>
+            <div class="row-amt" style="color:var(--warn)" id="cc-snap">$4,000</div>
+          </div>
+        </div>
+        <div class="tip tip-purple" style="margin-top:4px;">
+          <div class="tip-icon">💡</div>
+          <div class="tip-txt" id="phase-tip">Phase 1: paying <strong>$2,920/mo</strong> on loan + <strong>$444/mo</strong> on credit card until April 2027.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-log">
+      <div class="pad" style="padding-top:18px;">
+        <div class="card" style="padding:18px 20px;">
+          <div class="sh-title">Log expense</div>
+          <div class="fld"><label>Amount ($)</label><input id="f-amt" type="number" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div>
+          <div class="fld"><label>Category</label>
+            <select id="f-cat">
+              <option value="">Select category...</option>
+              <option>Groceries</option>
+              <option>Shopping</option>
+              <option>Buffer deposit</option>
+              <option>Miscellaneous</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="fld"><label>Note (optional)</label><input id="f-note" type="text" placeholder="e.g. Walmart, Costco..."/></div>
+          <button class="btn-p" onclick="addExp()">Add expense</button>
+          <div id="log-fb" style="font-size:13px;color:var(--success);text-align:center;min-height:18px;margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-debt">
+      <div class="pad" style="padding-top:18px;">
+        <div class="debt-card">
+          <div class="dc-top">
+            <div><div class="dc-name">🎓 Student loan</div><div class="dc-sub" id="sl-phase-lbl">Phase 1 — $2,920/month</div></div>
+            <div style="text-align:right"><div class="dc-amt" id="sl-bal" style="color:var(--danger);">$70,160</div><div class="dc-start">of $70,160 start</div></div>
+          </div>
+          <div class="dc-bar-wrap"><div class="dc-bar" id="sl-bar" style="background:var(--danger);width:100%"></div></div>
+          <div class="dc-stats">
+            <span id="sl-paid">$0 paid off</span>
+            <span id="sl-pct">0% done</span>
+            <span>Due: July 2028</span>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+            <button class="btn-s" onclick="openUpdate('sl')">Update balance</button>
+            <span style="font-size:12px;color:var(--txt2);">Update monthly after paying</span>
+          </div>
+        </div>
+
+        <div class="debt-card">
+          <div class="dc-top">
+            <div><div class="dc-name">💳 Credit card</div><div class="dc-sub">0% APR · expires April 2027</div></div>
+            <div style="text-align:right"><div class="dc-amt" id="cc-bal" style="color:var(--warn);">$4,000</div><div class="dc-start">of $4,000 start</div></div>
+          </div>
+          <div class="dc-bar-wrap"><div class="dc-bar" id="cc-bar" style="background:var(--warn);width:100%"></div></div>
+          <div class="dc-stats">
+            <span id="cc-paid">$0 paid off</span>
+            <span id="cc-pct">0% done</span>
+            <span id="cc-deadline">~9 months left</span>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+            <button class="btn-s" onclick="openUpdate('cc')">Update balance</button>
+            <span style="font-size:12px;color:var(--txt2);">Paying $444/month</span>
+          </div>
+        </div>
+
+        <div class="tip tip-warn">
+          <div class="tip-icon">⚠️</div>
+          <div class="tip-txt">Pay off the credit card <strong>before April 2027</strong> — at $444/month it clears in exactly 9 months. Miss the deadline and interest jumps to ~20%+.</div>
+        </div>
+        <div class="tip tip-green">
+          <div class="tip-icon">🎯</div>
+          <div class="tip-txt">On track to be completely debt-free by <strong>July 2028</strong>. Throw every 3rd paycheck ($2,459) at the loan.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-history">
+      <div class="pad" style="padding-top:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div class="sec" style="margin:0">This month</div>
+          <button class="btn-s" onclick="clearMonth()" style="font-size:11px;padding:6px 12px;">Clear month</button>
+        </div>
+        <div class="card"><div id="exp-list"></div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-summary">
+      <div class="pad" style="padding-top:18px;">
+        <div class="net-card">
+          <div><div class="net-lbl">Monthly surplus</div><div class="net-amt">$2,097</div></div>
+          <div style="font-size:36px;">💰</div>
+        </div>
+        <div class="sec">Monthly budget</div>
+        <div class="card">
+          <div class="sum-row"><span>Salary (net)</span><span style="color:var(--success);font-weight:700;">+$5,328</span></div>
+          <div class="sum-row"><span>Student loan</span><span style="color:var(--danger);font-weight:600;">-$1,467</span></div>
+          <div class="sum-row"><span>Rent</span><span style="color:var(--danger);font-weight:600;">-$660</span></div>
+          <div class="sum-row"><span>Utilities</span><span style="color:var(--danger);font-weight:600;">-$60</span></div>
+          <div class="sum-row"><span>Phone</span><span style="color:var(--danger);font-weight:600;">-$67</span></div>
+          <div class="sum-row"><span>Church tithe ($250 × 2)</span><span style="color:var(--danger);font-weight:600;">-$500</span></div>
+          <div class="sum-row"><span>Ministry support</span><span style="color:var(--danger);font-weight:600;">-$200</span></div>
+          <div class="sum-row"><span>Groceries ($50 × 4.3 wks)</span><span style="color:var(--danger);font-weight:600;">-$217</span></div>
+          <div class="sum-row"><span>Shopping ($30 × 2)</span><span style="color:var(--danger);font-weight:600;">-$60</span></div>
+          <div class="sum-row" style="border-top:2px solid var(--border)"><span style="font-weight:700;color:var(--txt)">Total fixed</span><span style="color:var(--danger);font-weight:700;">-$3,231</span></div>
+        </div>
+        <div class="sec">Surplus allocation</div>
+        <div class="card">
+          <div class="sum-row"><span>Emergency buffer</span><span style="color:var(--acc);font-weight:600;">$200</span></div>
+          <div class="sum-row" id="sum-cc-row"><span>Credit card payoff (Phase 1)</span><span style="color:var(--warn);font-weight:600;">$444</span></div>
+          <div class="sum-row"><span>Extra to student loan</span><span style="color:var(--success);font-weight:600;" id="sum-extra">$1,453</span></div>
+        </div>
+        <div class="sec">Per paycheck ($2,459)</div>
+        <div class="card">
+          <div class="sum-row"><span>Church tithe</span><span style="font-weight:600;color:var(--txt)">$250</span></div>
+          <div class="sum-row"><span>Shopping</span><span style="font-weight:600;color:var(--txt)">$30</span></div>
+          <div class="sum-row"><span>Groceries (2 weeks)</span><span style="font-weight:600;color:var(--txt)">$100</span></div>
+          <div class="sum-row"><span>Rent + utilities + phone</span><span style="font-weight:600;color:var(--txt)">$394</span></div>
+          <div class="sum-row"><span>Ministry (set aside)</span><span style="font-weight:600;color:var(--txt)">$100</span></div>
+          <div class="sum-row"><span>Emergency buffer</span><span style="color:var(--acc);font-weight:600;">$100</span></div>
+          <div class="sum-row" id="ppc-cc"><span>Credit card (Phase 1)</span><span style="color:var(--warn);font-weight:600;">$222</span></div>
+          <div class="sum-row"><span>Loan minimum (set aside)</span><span style="color:var(--success);font-weight:600;">$734</span></div>
+          <div class="sum-row"><span>Extra to loan</span><span style="color:var(--success);font-weight:600;" id="ppc-extra">$529</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bnav">
+    <button class="nb active" id="nav-home" onclick="nav('home')"><div class="ni">⌂</div>Home</button>
+    <button class="nb" id="nav-log" onclick="nav('log')"><div class="ni">＋</div>Log</button>
+    <button class="nb" id="nav-debt" onclick="nav('debt')"><div class="ni">◎</div>Debt</button>
+    <button class="nb" id="nav-history" onclick="nav('history')"><div class="ni">≡</div>History</button>
+    <button class="nb" id="nav-summary" onclick="nav('summary')"><div class="ni">⊞</div>Budget</button>
+  </div>
+</div>
+
+<div class="overlay" id="update-overlay" onclick="handleOverlay(event)">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sh-title" id="update-title">Update balance</div>
+    <div class="fld"><label>Current balance ($)</label><input id="update-input" type="number" step="0.01" min="0" inputmode="decimal" style="font-size:20px;font-weight:700;text-align:center;"/></div>
+    <button class="btn-p" onclick="saveUpdate()">Save balance</button>
+  </div>
+</div>
+
+<script>
+const BUDGETS={Groceries:217,Shopping:60};
+const COLORS={Groceries:'#16a34a',Shopping:'#9333ea','Buffer deposit':'#6c47ff',Miscellaneous:'#3b82f6',Other:'#6b7280'};
+const ICONS={Groceries:{bg:'rgba(22,163,74,.12)',e:'🛒'},Shopping:{bg:'rgba(147,51,234,.12)',e:'🛍️'},'Buffer deposit':{bg:'rgba(108,71,255,.12)',e:'🛡️'},Miscellaneous:{bg:'rgba(59,130,246,.12)',e:'🎯'},Other:{bg:'rgba(107,114,128,.12)',e:'📝'}};
+const PHASE1_END=new Date(2027,4,1);
+const SL_START=70160.07,CC_START=4000;
+
+const isP1=()=>new Date()<PHASE1_END;
+const getExps=()=>{try{return JSON.parse(localStorage.getItem('mb3_exp')||'[]')}catch{return[]}};
+const saveExps=d=>localStorage.setItem('mb3_exp',JSON.stringify(d));
+const getSLBal=()=>parseFloat(localStorage.getItem('mb3_sl')||SL_START);
+const getCCBal=()=>parseFloat(localStorage.getItem('mb3_cc')||CC_START);
+const getBuf=()=>parseFloat(localStorage.getItem('mb3_buf')||'0');
+const thisMonth=list=>{const n=new Date();return list.filter(e=>{const d=new Date(e.ts);return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()})};
+const fmt=n=>'$'+Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmtD=n=>'$'+parseFloat(Math.abs(n).toFixed(2)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function toggleTheme(){
+  const html=document.documentElement;
+  const dark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('theme-btn').textContent=dark?'🌙':'☀️';
+  document.getElementById('theme-color-meta').setAttribute('content',dark?'#ffffff':'#0f1117');
+  localStorage.setItem('mb3_theme',dark?'light':'dark');
+}
+
+(function initTheme(){
+  const saved=localStorage.getItem('mb3_theme')||'light';
+  if(saved==='dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('theme-btn').textContent='☀️';
+    document.getElementById('theme-color-meta').setAttribute('content','#0f1117');
+  }
+})();
+
+document.getElementById('month-label').textContent=new Date().toLocaleString('en-US',{month:'short',year:'numeric'});
+
+function updatePhaseUI(){
+  const p1=isP1();
+  const pill=document.getElementById('phase-pill');
+  pill.textContent=p1?'Phase 1':'Phase 2';
+  pill.className='phase-pill '+(p1?'phase1':'phase2');
+  document.getElementById('phase-tip').innerHTML=p1
+    ?'Phase 1: paying <strong>$2,920/mo</strong> on loan + <strong>$444/mo</strong> on credit card until April 2027.'
+    :'Phase 2: credit card cleared! Now paying <strong>$3,364/mo</strong> on student loan.';
+  document.getElementById('sl-phase-lbl').textContent=p1?'Phase 1 — $2,920/month':'Phase 2 — $3,364/month';
+  document.getElementById('sum-cc-row').style.display=p1?'':'none';
+  document.getElementById('ppc-cc').style.display=p1?'':'none';
+  document.getElementById('sum-extra').textContent=p1?'$1,453':'$1,897';
+  document.getElementById('ppc-extra').textContent=p1?'$529':'$751';
+}
+
+function renderHome(){
+  const monthly=thisMonth(getExps());
+  const logged=monthly.reduce((s,e)=>s+e.amt,0);
+  const totalBudget=BUDGETS.Groceries+BUDGETS.Shopping;
+  const remaining=Math.max(0,totalBudget-logged);
+  document.getElementById('h-bal').textContent=fmt(remaining);
+  document.getElementById('h-sub').textContent=fmt(logged)+' spent of '+fmt(totalBudget)+' variable budget';
+  document.getElementById('s-logged').textContent=fmt(logged);
+  const sl=getSLBal(),cc=getCCBal(),buf=getBuf();
+  const slPct=Math.round((1-sl/SL_START)*100);
+  document.getElementById('sl-snap').textContent=fmtD(sl)+' remaining';
+  document.getElementById('sl-pct-home').textContent=slPct+'% paid';
+  document.getElementById('sl-pct-home').style.color=slPct>50?'var(--success)':'var(--danger)';
+  document.getElementById('cc-snap').textContent=fmtD(cc);
+  const bufPct=Math.min(100,Math.round(buf/4800*100));
+  document.getElementById('buf-pct').textContent=fmt(buf);
+  document.getElementById('buf-fill').style.width=bufPct+'%';
+  const bars=document.getElementById('bud-bars');
+  bars.innerHTML=Object.entries(BUDGETS).map(([cat,budget])=>{
+    const spent=monthly.filter(e=>e.cat===cat).reduce((s,e)=>s+e.amt,0);
+    const pct=Math.min(100,Math.round(spent/budget*100));
+    const bc=pct>=100?'var(--danger)':pct>=75?'var(--warn)':COLORS[cat];
+    const pb=pct>=100?'var(--danger-l)':pct>=75?'var(--warn-l)':'var(--success-l)';
+    const pc=pct>=100?'var(--danger)':pct>=75?'var(--warn)':'var(--success)';
+    const ic=ICONS[cat]||{bg:'var(--bg2)',e:'📦'};
+    return`<div class="card bud-item" style="margin-bottom:8px;">
+      <div class="bud-top">
+        <div class="bud-name"><div class="bud-icon" style="background:${ic.bg}">${ic.e}</div>${cat}</div>
+        <div class="bud-pct" style="background:${pb};color:${pc};">${pct}%</div>
+      </div>
+      <div class="bud-nums">${fmt(spent)} spent · ${fmt(Math.max(0,budget-spent))} left of ${fmt(budget)}</div>
+      <div class="track"><div class="fill" style="width:${pct}%;background:${bc}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderDebt(){
+  const sl=getSLBal(),cc=getCCBal();
+  const slPaid=SL_START-sl,slPct=Math.max(0,Math.round(slPaid/SL_START*100));
+  const ccPaid=CC_START-cc,ccPct=Math.max(0,Math.round(ccPaid/CC_START*100));
+  document.getElementById('sl-bal').textContent=fmtD(sl);
+  document.getElementById('sl-bar').style.width=Math.max(2,100-slPct)+'%';
+  document.getElementById('sl-bar').style.background=slPct>50?'var(--success)':'var(--danger)';
+  document.getElementById('sl-paid').textContent=fmt(Math.max(0,slPaid))+' paid off';
+  document.getElementById('sl-pct').textContent=slPct+'% done';
+  document.getElementById('cc-bal').textContent=fmtD(Math.max(0,cc));
+  document.getElementById('cc-bar').style.width=Math.max(2,100-ccPct)+'%';
+  document.getElementById('cc-bar').style.background=ccPct>=80?'var(--success)':'var(--warn)';
+  document.getElementById('cc-paid').textContent=fmt(Math.max(0,ccPaid))+' paid off';
+  document.getElementById('cc-pct').textContent=ccPct+'% done';
+  const mLeft=Math.max(0,Math.round((new Date(2027,3,1)-new Date())/(1000*60*60*24*30)));
+  document.getElementById('cc-deadline').textContent='~'+mLeft+' months to deadline';
+}
+
+function renderHistory(){
+  const monthly=thisMonth(getExps()).sort((a,b)=>b.ts-a.ts);
+  const el=document.getElementById('exp-list');
+  if(!monthly.length){el.innerHTML='<div class="empty">No expenses logged yet.<br/>Tap Log to add your first one.</div>';return;}
+  el.innerHTML=monthly.map(e=>{
+    const d=new Date(e.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return`<div class="exp-row">
+      <div class="exp-dot" style="background:${COLORS[e.cat]||'#6b7280'}"></div>
+      <div class="exp-body"><div class="exp-desc">${e.note||e.cat}</div><div class="exp-meta">${e.cat} · ${d}</div></div>
+      <div class="exp-amt">${fmtD(e.amt)}</div>
+      <button class="exp-del" onclick="delExp(${e.ts})" aria-label="Delete">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id)?.classList.add('active');
+  document.querySelector('.scroll').scrollTop=0;
+  if(id==='home')renderHome();
+  if(id==='debt')renderDebt();
+  if(id==='history')renderHistory();
+}
+
+function addExp(){
+  const amt=parseFloat(document.getElementById('f-amt').value);
+  const cat=document.getElementById('f-cat').value;
+  const note=document.getElementById('f-note').value.trim();
+  if(!amt||amt<=0||!cat){
+    const el=document.getElementById(!amt||amt<=0?'f-amt':'f-cat');
+    el.style.borderColor='var(--danger)';
+    setTimeout(()=>el.style.borderColor='transparent',1500);
+    return;
+  }
+  if(cat==='Buffer deposit'){localStorage.setItem('mb3_buf',(getBuf()+amt).toFixed(2));}
+  const exps=getExps();
+  exps.push({ts:Date.now(),amt,cat,note});
+  saveExps(exps);
+  document.getElementById('f-amt').value='';
+  document.getElementById('f-cat').value='';
+  document.getElementById('f-note').value='';
+  const fb=document.getElementById('log-fb');
+  fb.textContent='✓ Added!';
+  setTimeout(()=>fb.textContent='',2000);
+  renderHome();
+}
+
+function delExp(ts){
+  if(!confirm('Remove this expense?'))return;
+  saveExps(getExps().filter(e=>e.ts!==ts));
+  renderHistory();renderHome();
+}
+
+function clearMonth(){
+  if(!confirm('Clear all this month\'s expenses?'))return;
+  const n=new Date();
+  saveExps(getExps().filter(e=>{const d=new Date(e.ts);return!(d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear())}));
+  renderHistory();renderHome();
+}
+
+let updateTarget='';
+function openUpdate(t){
+  updateTarget=t;
+  document.getElementById('update-title').textContent=t==='sl'?'Update student loan balance':'Update credit card balance';
+  document.getElementById('update-input').value=(t==='sl'?getSLBal():getCCBal()).toFixed(2);
+  document.getElementById('update-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('update-input').focus(),300);
+}
+function saveUpdate(){
+  const val=parseFloat(document.getElementById('update-input').value);
+  if(isNaN(val)||val<0)return;
+  localStorage.setItem(updateTarget==='sl'?'mb3_sl':'mb3_cc',val.toFixed(2));
+  document.getElementById('update-overlay').classList.remove('open');
+  renderDebt();renderHome();
+}
+function handleOverlay(e){if(e.target===document.getElementById('update-overlay'))document.getElementById('update-overlay').classList.remove('open');}
+
+updatePhaseUI();renderHome();
+</script>
+</body>
+</html>
