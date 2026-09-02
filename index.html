@@ -219,12 +219,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Outfit'
 <!-- HOME -->
 <div class="page active" id="page-home">
   <div class="hero">
-    <div class="hb" onclick="openEditIncome()">
+    <div class="hb" onclick="openEditStartBal()">
       <div class="hb-orb1"></div><div class="hb-orb2"></div><div class="hb-shimmer"></div>
-      <button class="hedit" onclick="event.stopPropagation();openEditIncome()">✏️ Edit</button>
-      <div class="hl">available this month</div>
-      <div class="ha" id="h-bal">$277</div>
-      <div class="hs" id="h-sub">$0 spent of $277 variable budget</div>
+      <button class="hedit" onclick="event.stopPropagation();openEditStartBal()">✏️ Set balance</button>
+      <div class="hl">current balance</div>
+      <div class="ha" id="h-bal">$0</div>
+      <div class="hs" id="h-sub">$0 in · $0 out this month</div>
     </div>
   </div>
   <div class="stats">
@@ -272,8 +272,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Outfit'
       <div class="fld" id="f-cat-wrap"><label>Category</label>
         <select id="f-cat">
           <option value="">Select category...</option>
-          <option>Groceries</option><option>Shopping</option><option>Buffer deposit</option>
-          <option>Bills</option><option>Miscellaneous</option><option>Other</option>
+          <option>Groceries</option><option>Shopping</option>
+          <option>Rent</option><option>Utilities</option><option>Phone bill</option>
+          <option>Church tithe</option><option>Ministry support</option>
+          <option>Student loan payment</option><option>Credit card payment</option>
+          <option>Buffer deposit</option><option>Miscellaneous</option><option>Other</option>
         </select>
       </div>
       <div class="fld"><label>Note (optional)</label><input id="f-note" type="text" placeholder="e.g. Walmart, Paycheck..."/></div>
@@ -429,9 +432,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Outfit'
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const BD={income:5328,student_loan:1467,rent:660,utilities:60,phone:67,church:500,ministry:200,groceries:217,shopping:60,buffer:200,cc_payment:444,extra_loan:1453};
-const BL={income:'Monthly net income',student_loan:'Student loan',rent:'Rent',utilities:'Utilities',phone:'Phone bill',church:'Church tithe',ministry:'Ministry support',groceries:'Groceries budget',shopping:'Shopping budget',buffer:'Emergency buffer',cc_payment:'Credit card payoff',extra_loan:'Extra to student loan'};
+const BL={income:'Monthly net income',student_loan:'Student loan',rent:'Rent',utilities:'Utilities',phone:'Phone bill',church:'Church tithe',ministry:'Ministry support',groceries:'Groceries budget',shopping:'Shopping budget',buffer:'Emergency buffer',cc_payment:'Credit card payoff',extra_loan:'Extra to student loan',start_balance:'Bank account balance'};
 const SL_START=70160.07,CC_START=4000,PHASE1_END=new Date(2027,4,1);
-const COLORS={Groceries:'#16a34a',Shopping:'#9333ea','Buffer deposit':'#6c47ff',Bills:'#3b82f6',Miscellaneous:'#f59e0b',Other:'#6b7280'};
+const COLORS={Groceries:'#16a34a',Shopping:'#9333ea',Rent:'#0ea5e9',Utilities:'#eab308','Phone bill':'#14b8a6','Church tithe':'#ec4899','Ministry support':'#f97316','Student loan payment':'#dc2626','Credit card payment':'#fb7185','Buffer deposit':'#6c47ff',Bills:'#3b82f6',Miscellaneous:'#f59e0b',Other:'#6b7280'};
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ── STORAGE ──────────────────────────────────────────────────────────────────
@@ -444,9 +447,11 @@ const saveTxns=d=>set('mb5_txns',d);
 const getSLBal=()=>parseFloat(localStorage.getItem('mb5_sl')||SL_START);
 const getCCBal=()=>parseFloat(localStorage.getItem('mb5_cc')||CC_START);
 const getBuf=()=>parseFloat(localStorage.getItem('mb5_buf')||0);
+const getStartBal=()=>parseFloat(localStorage.getItem('mb5_startbal')||0);
 const isP1=()=>new Date()<PHASE1_END;
 const thisMonth=txns=>{const n=new Date();return txns.filter(t=>{const d=new Date(t.ts);return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()})};
 const fmt=n=>'$'+Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmtSigned=n=>(n<0?'-$':'$')+Math.round(Math.abs(n)).toLocaleString('en-US');
 const fmtD=n=>'$'+parseFloat(Math.abs(n).toFixed(2)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const todayStr=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);};
 const getSurplus=()=>{const b=getBudget();return b.income-(b.student_loan+b.rent+b.utilities+b.phone+b.church+b.ministry+b.groceries+b.shopping)};
@@ -465,13 +470,13 @@ let prevBalance=null;
 function animateBalance(target){
   const el=document.getElementById('h-bal');
   const start=prevBalance!==null?prevBalance:target;
-  if(start===target&&prevBalance!==null){el.textContent=fmt(target);return}
+  if(start===target&&prevBalance!==null){el.textContent=fmtSigned(target);return}
   prevBalance=target;
   const dur=700,t0=performance.now();
   const tick=now=>{
     const p=Math.min((now-t0)/dur,1);
     const e=1-Math.pow(1-p,3);
-    el.textContent=fmt(start+(target-start)*e);
+    el.textContent=fmtSigned(start+(target-start)*e);
     if(p<1)requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
@@ -526,13 +531,16 @@ function updatePhaseUI(){
 // ── HOME ─────────────────────────────────────────────────────────────────────
 function renderHome(){
   const b=getBudget();
-  const txns=thisMonth(getTxns());
+  const allTxns=getTxns();
+  const txns=thisMonth(allTxns);
   const expenses=txns.filter(t=>t.type==='expense');
   const logged=expenses.reduce((s,t)=>s+t.amt,0);
-  const varBudget=b.groceries+b.shopping;
   const fixedTotal=b.student_loan+b.rent+b.utilities+b.phone+b.church+b.ministry+b.groceries+b.shopping;
-  animateBalance(Math.max(0,varBudget-logged));
-  document.getElementById('h-sub').textContent=fmt(logged)+' spent of '+fmt(varBudget)+' variable budget';
+  const monthIn=txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amt,0);
+  const monthOut=logged;
+  const balance=getStartBal()+allTxns.reduce((s,t)=>s+(t.type==='income'?t.amt:-t.amt),0);
+  animateBalance(balance);
+  document.getElementById('h-sub').textContent=fmt(monthIn)+' in · '+fmt(monthOut)+' out this month';
   document.getElementById('s-inc').textContent=fmt(b.income);
   document.getElementById('s-fix').textContent=fmt(fixedTotal);
   document.getElementById('s-log').textContent=fmt(logged);
@@ -574,21 +582,28 @@ function renderBudget(){
 }
 let editKey='';
 function openBudgetEdit(key){
-  editKey=key;const b=getBudget();
+  editKey=key;
+  const val=key==='start_balance'?getStartBal():getBudget()[key];
   document.getElementById('bedit-ttl').textContent='Edit: '+BL[key];
   document.getElementById('bedit-lbl').textContent=BL[key]+' ($)';
-  document.getElementById('bedit-inp').value=b[key];
+  document.getElementById('bedit-inp').value=val;
+  document.getElementById('bedit-inp').min=key==='start_balance'?'':'0';
   openSheet('bedit-ovl');setTimeout(()=>document.getElementById('bedit-inp').focus(),350);
 }
 function saveBudgetEdit(e){
   ripple(e);
   const val=parseFloat(document.getElementById('bedit-inp').value);
-  if(isNaN(val)||val<0)return;
-  const b=getBudget();b[editKey]=val;saveBudget(b);
+  if(isNaN(val)||(editKey!=='start_balance'&&val<0))return;
+  if(editKey==='start_balance'){
+    localStorage.setItem('mb5_startbal',val);
+  }else{
+    const b=getBudget();b[editKey]=val;saveBudget(b);
+  }
   closeSheet('bedit-ovl');
   setTimeout(()=>{renderBudget();renderHome();},200);
 }
 const openEditIncome=()=>openBudgetEdit('income');
+const openEditStartBal=()=>openBudgetEdit('start_balance');
 
 // ── LOG ──────────────────────────────────────────────────────────────────────
 let txnType='expense';
